@@ -37,7 +37,7 @@ void fatal_error(const char *syscall) {
 
 void check_for_index_file() {
     struct stat st;
-    int ret = stat("public/index.html", &st);
+    int ret = stat("../public/index.html", &st);
     if (ret < 0) {
         fprintf(stderr, "ZeroHTTPd needs the \"public\" directory to be "
                         "present in the current directory.\n");
@@ -103,7 +103,7 @@ int setup_listening_socket(int port) {
     return (sock);
 }
 
-void send_static_string_content(const char *str, int client_socket) {
+void send_static_string_content(const char *str, int client_socket, int epoll_fd) {
     struct request *req = zh_malloc(sizeof(*req) + sizeof(struct iovec));
     unsigned long slen = strlen(str);
     req->iovec_count = 1;
@@ -111,7 +111,7 @@ void send_static_string_content(const char *str, int client_socket) {
     req->iov[0].iov_base = zh_malloc(slen);
     req->iov[0].iov_len = slen;
     memcpy(req->iov[0].iov_base, str, slen);
-    add_write_request(req);
+    add_write_request(req,epoll_fd);
 }
 
 
@@ -120,7 +120,7 @@ int add_accept_request(int server_socket, struct sockaddr_in *client_addr,
     if (type == 0) {
         uring_add_accept_request(server_socket, client_addr, client_addr_len);
     } else {
-        epoll_add_accept_request(server_socket, epoll_fd);
+//        epoll_add_accept_request(server_socket, epoll_fd);
     }
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    io_uring_prep_accept(sqe, server_socket, (struct sockaddr *) client_addr,
@@ -138,7 +138,7 @@ int add_read_request(int client_socket, int epoll_fd) {
     if (type == 0) {
         uring_add_read_request(client_socket);
     } else {
-        epoll_add_read_request(client_socket, epoll_fd);
+//        epoll_add_read_request(client_socket, epoll_fd);
     }
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    struct request *req = malloc(sizeof(*req) + sizeof(struct iovec));
@@ -159,7 +159,7 @@ int add_write_request(struct request *req, int epoll_fd) {
     if (type == 0) {
         uring_add_write_request(req);
     } else {
-        epoll_add_write_request(req, epoll_fd);
+//        epoll_add_write_request(req, epoll_fd);
     }
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    req->event_type = EVENT_TYPE_WRITE;
@@ -173,16 +173,16 @@ int add_write_request(struct request *req, int epoll_fd) {
  * When ZeroHTTPd encounters any other HTTP method other than GET or POST, this function
  * is used to inform the client.
  * */
-void handle_unimplemented_method(int client_socket) {
-    send_static_string_content(UNIMPLEMENT, client_socket);
+void handle_unimplemented_method(int client_socket, int epoll_fd) {
+    send_static_string_content(UNIMPLEMENT, client_socket, epoll_fd);
 }
 
 /*
  * This function is used to send a "HTTP Not Found" code and message to the client in
  * case the file requested is not found.
  * */
-void handle_http_404(int client_socket) {
-    send_static_string_content(ERRORMSG_404, client_socket);
+void handle_http_404(int client_socket, int epoll_fd) {
+    send_static_string_content(ERRORMSG_404, client_socket, epoll_fd);
 }
 
 /*
@@ -290,28 +290,30 @@ void send_headers(const char *path, off_t len, struct iovec *iov) {
     memcpy(iov[4].iov_base, send_buffer, slen);
 }
 
-void handle_get_method(char *path, int client_socket) {
-    char final_path[1024];
+void handle_get_method(char *path, int client_socket, int epoll_fd) {
+    char final_path[1024] = {'\0'};
+    strcpy(final_path, "../");
 
     /*
      If a path ends in a trailing slash, the client probably wants the index
      file inside of that directory.
      */
     if (path[strlen(path) - 1] == '/') {
-        strcpy(final_path, "public");
+        strcat(final_path, "public");
         strcat(final_path, path);
         strcat(final_path, "index.html");
     } else {
-        strcpy(final_path, "public");
+        strcat(final_path, "public");
         strcat(final_path, path);
     }
+    printf("%s", final_path);
 
     /* The stat() system call will give you information about the file
      * like type (regular file, directory, etc), size, etc. */
     struct stat path_stat;
     if (stat(final_path, &path_stat) == -1) {
         printf("404 Not Found: %s (%s)\n", final_path, path);
-        handle_http_404(client_socket);
+        handle_http_404(client_socket, epoll_fd);
     } else {
         /* Check if this is a normal/regular file and not a directory or something else */
         if (S_ISREG(path_stat.st_mode)) {
@@ -321,9 +323,9 @@ void handle_get_method(char *path, int client_socket) {
             send_headers(final_path, path_stat.st_size, req->iov);
             copy_file_contents(final_path, path_stat.st_size, &req->iov[5]);
             printf("200 %s %ld bytes\n", final_path, path_stat.st_size);
-            add_write_request(req);
+            add_write_request(req, epoll_fd);
         } else {
-            handle_http_404(client_socket);
+            handle_http_404(client_socket, epoll_fd);
             printf("404 Not Found: %s\n", final_path);
         }
     }
@@ -335,7 +337,7 @@ void handle_get_method(char *path, int client_socket) {
  * in case both these don't match. This sends an error to the client.
  * */
 
-void handle_http_method(char *method_buffer, int client_socket) {
+void handle_http_method(char *method_buffer, int client_socket, int epoll_fd) {
     char *method, *path, *saveptr;
 
     method = strtok_r(method_buffer, " ", &saveptr);
@@ -343,9 +345,9 @@ void handle_http_method(char *method_buffer, int client_socket) {
     path = strtok_r(NULL, " ", &saveptr);
 
     if (strcmp(method, "get") == 0) {
-        handle_get_method(path, client_socket);
+        handle_get_method(path, client_socket, epoll_fd);
     } else {
-        handle_unimplemented_method(client_socket);
+        handle_unimplemented_method(client_socket, epoll_fd);
     }
 }
 
@@ -360,13 +362,13 @@ int get_line(const char *src, char *dest, int dest_sz) {
     return 1;
 }
 
-int handle_client_request(struct request *req) {
+int handle_client_request(struct request *req, int epoll_fd) {
     char http_request[1024];
     /* Get the first line, which will be the request */
     if (get_line(req->iov[0].iov_base, http_request, sizeof(http_request))) {
         fprintf(stderr, "Malformed request\n");
         exit(1);
     }
-    handle_http_method(http_request, req->client_socket);
+    handle_http_method(http_request, req->client_socket, epoll_fd);
     return 0;
 }

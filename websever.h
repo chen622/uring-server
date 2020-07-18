@@ -103,11 +103,11 @@ int add_read_request(int client_socket, int epoll_fd);
 
 int add_write_request(struct request *req, int epoll_fd);
 
-void send_static_string_content(const char *str, int client_socket);
+void send_static_string_content(const char *str, int client_socket, int epoll_fd);
 
-void handle_unimplemented_method(int client_socket);
+void handle_unimplemented_method(int client_socket, int epoll_fd);
 
-void handle_http_404(int client_socket);
+void handle_http_404(int client_socket, int epoll_fd);
 
 void copy_file_contents(char *file_path, off_t file_size, struct iovec *iov);
 
@@ -115,13 +115,13 @@ const char *get_filename_ext(const char *filename);
 
 void send_headers(const char *path, off_t len, struct iovec *iov);
 
-void handle_get_method(char *path, int client_socket);
+void handle_get_method(char *path, int client_socket, int epoll_fd);
 
-void handle_http_method(char *method_buffer, int client_socket);
+void handle_http_method(char *method_buffer, int client_socket, int epoll_fd);
 
 int get_line(const char *src, char *dest, int dest_sz);
 
-int handle_client_request(struct request *req);
+int handle_client_request(struct request *req, int epoll_fd);
 
 int uring_add_accept_request(int server_socket, struct sockaddr_in *client_addr,
                        socklen_t *client_addr_len);

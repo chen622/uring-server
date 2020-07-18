@@ -126,7 +126,7 @@ void server_loop(int server_socket) {
                     fprintf(stderr, "Empty request!\n");
                     break;
                 }
-                handle_client_request(req);
+                handle_client_request(req,-1);
                 free(req->iov[0].iov_base);
                 free(req);
                 break;
