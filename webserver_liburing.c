@@ -97,7 +97,7 @@ int uring_add_write_request(struct request *req) {
 }
 
 
-void server_loop(int server_socket) {
+void server_loop_uring(int server_socket) {
     struct io_uring_cqe *cqe;
     struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
@@ -149,18 +149,18 @@ void sigint_handler(int signo) {
     exit(0);
 }
 
-int main() {
-    type = 0;
-    if (check_kernel_version()) {
-        return EXIT_FAILURE;
-    }
-    check_for_index_file();
-    int server_socket = setup_listening_socket(DEFAULT_SERVER_PORT);
-    printf("ZeroHTTPd listening on port: %d\n", DEFAULT_SERVER_PORT);
-
-    signal(SIGINT, sigint_handler);
-    io_uring_queue_init(QUEUE_DEPTH, &ring, 0);
-    server_loop(server_socket);
-
-    return 0;
-}
+//int main() {
+//    type = 0;
+//    if (check_kernel_version()) {
+//        return EXIT_FAILURE;
+//    }
+//    check_for_index_file();
+//    int server_socket = setup_listening_socket(DEFAULT_SERVER_PORT);
+//    printf("ZeroHTTPd listening on port: %d\n", DEFAULT_SERVER_PORT);
+//
+//    signal(SIGINT, sigint_handler);
+//    io_uring_queue_init(QUEUE_DEPTH, &ring, 0);
+//    server_loop_uring(server_socket);
+//
+//    return 0;
+//}

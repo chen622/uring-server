@@ -120,7 +120,7 @@ int add_accept_request(int server_socket, struct sockaddr_in *client_addr,
     if (type == 0) {
         uring_add_accept_request(server_socket, client_addr, client_addr_len);
     } else {
-//        epoll_add_accept_request(server_socket, epoll_fd);
+        epoll_add_accept_request(server_socket, epoll_fd);
     }
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    io_uring_prep_accept(sqe, server_socket, (struct sockaddr *) client_addr,
@@ -138,7 +138,7 @@ int add_read_request(int client_socket, int epoll_fd) {
     if (type == 0) {
         uring_add_read_request(client_socket);
     } else {
-//        epoll_add_read_request(client_socket, epoll_fd);
+        epoll_add_read_request(client_socket, epoll_fd);
     }
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    struct request *req = malloc(sizeof(*req) + sizeof(struct iovec));
@@ -159,7 +159,7 @@ int add_write_request(struct request *req, int epoll_fd) {
     if (type == 0) {
         uring_add_write_request(req);
     } else {
-//        epoll_add_write_request(req, epoll_fd);
+        epoll_add_write_request(req, epoll_fd);
     }
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    req->event_type = EVENT_TYPE_WRITE;
