@@ -111,17 +111,13 @@ void send_static_string_content(const char *str, int client_socket, int epoll_fd
     req->iov[0].iov_base = zh_malloc(slen);
     req->iov[0].iov_len = slen;
     memcpy(req->iov[0].iov_base, str, slen);
-    add_write_request(req,epoll_fd);
+    add_write_request(req, epoll_fd);
 }
 
 
 int add_accept_request(int server_socket, struct sockaddr_in *client_addr,
                        socklen_t *client_addr_len, int epoll_fd) {
-    if (type == 0) {
-        uring_add_accept_request(server_socket, client_addr, client_addr_len);
-    } else {
-        epoll_add_accept_request(server_socket, epoll_fd);
-    }
+    real_add_accept_request(server_socket, client_addr, client_addr_len, epoll_fd);
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    io_uring_prep_accept(sqe, server_socket, (struct sockaddr *) client_addr,
 //                         client_addr_len, 0);
@@ -135,11 +131,7 @@ int add_accept_request(int server_socket, struct sockaddr_in *client_addr,
 
 int add_read_request(int client_socket, int epoll_fd) {
 
-    if (type == 0) {
-        uring_add_read_request(client_socket);
-    } else {
-        epoll_add_read_request(client_socket, epoll_fd);
-    }
+    real_add_read_request(client_socket, epoll_fd);
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    struct request *req = malloc(sizeof(*req) + sizeof(struct iovec));
 //    req->iov[0].iov_base = malloc(READ_SZ);
@@ -156,11 +148,7 @@ int add_read_request(int client_socket, int epoll_fd) {
 
 int add_write_request(struct request *req, int epoll_fd) {
 
-    if (type == 0) {
-        uring_add_write_request(req);
-    } else {
-        epoll_add_write_request(req, epoll_fd);
-    }
+    real_add_write_request(req, epoll_fd);
 //    struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
 //    req->event_type = EVENT_TYPE_WRITE;
 //    io_uring_prep_writev(sqe, req->client_socket, req->iov, req->iovec_count, 0);

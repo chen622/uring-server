@@ -59,8 +59,8 @@ int check_kernel_version() {
     return 1;
 }
 
-int uring_add_accept_request(int server_socket, struct sockaddr_in *client_addr,
-                       socklen_t *client_addr_len) {
+int real_add_accept_request(int server_socket, struct sockaddr_in *client_addr,
+                       socklen_t *client_addr_len, int epoll_fd) {
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
     io_uring_prep_accept(sqe, server_socket, (struct sockaddr *) client_addr,
                          client_addr_len, 0);
@@ -72,7 +72,7 @@ int uring_add_accept_request(int server_socket, struct sockaddr_in *client_addr,
     return 0;
 }
 
-int uring_add_read_request(int client_socket) {
+int real_add_read_request(int client_socket, int epoll_fd) {
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
     struct request *req = malloc(sizeof(*req) + sizeof(struct iovec));
     req->iov[0].iov_base = malloc(READ_SZ);
@@ -87,7 +87,7 @@ int uring_add_read_request(int client_socket) {
     return 0;
 }
 
-int uring_add_write_request(struct request *req) {
+int real_add_write_request(struct request *req, int epoll_fd) {
     struct io_uring_sqe *sqe = io_uring_get_sqe(&ring);
     req->event_type = EVENT_TYPE_WRITE;
     io_uring_prep_writev(sqe, req->client_socket, req->iov, req->iovec_count, 0);
@@ -149,18 +149,18 @@ void sigint_handler(int signo) {
     exit(0);
 }
 
-//int main() {
-//    type = 0;
-//    if (check_kernel_version()) {
-//        return EXIT_FAILURE;
-//    }
-//    check_for_index_file();
-//    int server_socket = setup_listening_socket(DEFAULT_SERVER_PORT);
-//    printf("ZeroHTTPd listening on port: %d\n", DEFAULT_SERVER_PORT);
-//
-//    signal(SIGINT, sigint_handler);
-//    io_uring_queue_init(QUEUE_DEPTH, &ring, 0);
-//    server_loop_uring(server_socket);
-//
-//    return 0;
-//}
+int main() {
+    type = 0;
+    if (check_kernel_version()) {
+        return EXIT_FAILURE;
+    }
+    check_for_index_file();
+    int server_socket = setup_listening_socket(8001);
+    printf("ZeroHTTPd listening on port: %d\n", 8001);
+
+    signal(SIGINT, sigint_handler);
+    io_uring_queue_init(QUEUE_DEPTH, &ring, 0);
+    server_loop_uring(server_socket);
+
+    return 0;
+}

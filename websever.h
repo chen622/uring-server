@@ -50,7 +50,7 @@
 #define MIN_KERNEL_VERSION      5
 #define MIN_MAJOR_VERSION       5
 
-#define MAX_EVENTS 20
+#define MAX_EVENTS 100
 
 #define UNIMPLEMENT "HTTP/1.0 400 Bad Request\r\n"\
                                 "Content-type: text/html\r\n"\
@@ -123,17 +123,12 @@ int get_line(const char *src, char *dest, int dest_sz);
 
 int handle_client_request(struct request *req, int epoll_fd);
 
-int uring_add_accept_request(int server_socket, struct sockaddr_in *client_addr,
-                       socklen_t *client_addr_len);
 
-int uring_add_read_request(int client_socket);
+int real_add_accept_request(int server_socket, struct sockaddr_in *client_addr,
+                            socklen_t *client_addr_len, int epoll_fd);
 
-int uring_add_write_request(struct request *req);
+int real_add_read_request(int client_socket, int epoll_fd);
 
-int epoll_add_accept_request(int server_socket, int epoll_fd);
-
-int epoll_add_read_request(int client_socket, int epoll_fd);
-
-int epoll_add_write_request(struct request *req, int epoll_fd);
+int real_add_write_request(struct request *req, int epoll_fd);
 
 #endif //URING_SERVER_WEBSEVER_H

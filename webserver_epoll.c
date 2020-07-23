@@ -26,21 +26,22 @@
 extern int type;
 
 
-int epoll_add_accept_request(int server_socket, int epoll_fd) {
+int real_add_accept_request(int server_socket, struct sockaddr_in *client_addr,
+                            socklen_t *client_addr_len, int epoll_fd) {
     struct epoll_event event;
     event.events = EPOLLIN;
     event.data.fd = server_socket;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_socket, &event);
 }
 
-int epoll_add_read_request(int client_socket, int epoll_fd) {
+int real_add_read_request(int client_socket, int epoll_fd) {
     struct epoll_event event;
     event.events = EPOLLIN;
     event.data.fd = client_socket;
     return epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_socket, &event);
 }
 
-int epoll_add_write_request(struct request *req, int epoll_fd) {
+int real_add_write_request(struct request *req, int epoll_fd) {
     struct epoll_event event;
     event.events = EPOLLOUT;
     event.data.fd = req->client_socket;
@@ -126,6 +127,7 @@ void server_loop_epoll(int server_socket) {
                 }
                 epoll_ctl(epoll_fd,EPOLL_CTL_DEL,req->client_socket,&events[j]);
                 close(req->client_socket);
+                free(req);
             }
         }
     }
