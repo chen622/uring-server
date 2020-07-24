@@ -2,7 +2,7 @@
 
 本测试对比了作为HTTP Server时，两种io框架的性能差距。为节省工作量，io_uring 使用了 liburing 包来避免需要修改底层参数。
 
-##使用教程
+## 使用教程
 
 ### 1. 安装liburing
 
@@ -22,7 +22,7 @@ cmake ..
 cmake --build .
 ```
 
-###　3. 运行测试程序
+### 3. 运行测试程序
 
 ```bash
 ./uring_server
