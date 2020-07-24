@@ -40,7 +40,7 @@
 
 #define SERVER_STRING           "Server: zerohttpd/0.1\r\n"
 #define DEFAULT_SERVER_PORT     8000
-#define QUEUE_DEPTH             256
+#define QUEUE_DEPTH             100
 #define READ_SZ                 8192
 
 #define EVENT_TYPE_ACCEPT       0
@@ -77,6 +77,28 @@
                                 "<p>Your client is asking for an object that was not found on this server.</p>"\
                                 "</body>"\
                                 "</html>"
+
+#define HTML "<!DOCTYPE html>"\
+                "<html lang=\"en\">"\
+           "<head>"\
+           "<title>Welcome to ZeroHTTPd</title>"\
+"<style>"\
+        "body {"\
+        "font-family: sans-serif;"\
+        "margin: 15px;"\
+        "text-align: center;"\
+"}"\
+"</style>"\
+"</head>"\
+"<body>"\
+"<h1>It works! (kinda)</h1>"\
+"<img src=\"tux.png\" alt=\"Tux, the Linux mascot\">"\
+                                              "<p>It is sure great to get out of that socket!</p>"\
+                                              "<p>ZeroHTTPd is a ridiculously simple (and incomplete) web server written for learning about Linux performance.</p>"\
+                                              "<p>Learn more about Linux performance at <a href=\"https://unixism.net/2019/04/28/linux-applications-performance-introduction/\">unixism.net</a></p>"\
+"<p>This version of ZeroHTTPd uses io_uring. Learn more about io_uring <a href=\"https://unixism.net/loti\">here</a>.</p>"\
+"</body>"\
+"</html>"
 
 struct request {
     int event_type;

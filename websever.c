@@ -180,18 +180,18 @@ void handle_http_404(int client_socket, int epoll_fd) {
  * */
 void copy_file_contents(char *file_path, off_t file_size, struct iovec *iov) {
     int fd;
-
     char *buf = zh_malloc(file_size);
-    fd = open(file_path, O_RDONLY);
-    if (fd < 0)
-        fatal_error("read");
-
-    /* We should really check for short reads here */
-    int ret = read(fd, buf, file_size);
-    if (ret < file_size) {
-        fprintf(stderr, "Encountered a short read.\n");
-    }
-    close(fd);
+    strcpy(buf, HTML);
+//    fd = open(file_path, O_RDONLY);
+//    if (fd < 0)
+//        fatal_error("read");
+//
+//    /* We should really check for short reads here */
+//    int ret = read(fd, buf, file_size);
+//    if (ret < file_size) {
+//        fprintf(stderr, "Encountered a short read.\n");
+//    }
+//    close(fd);
 
     iov->iov_base = buf;
     iov->iov_len = file_size;
@@ -298,25 +298,26 @@ void handle_get_method(char *path, int client_socket, int epoll_fd) {
 
     /* The stat() system call will give you information about the file
      * like type (regular file, directory, etc), size, etc. */
-    struct stat path_stat;
-    if (stat(final_path, &path_stat) == -1) {
-        printf("404 Not Found: %s (%s)\n", final_path, path);
-        handle_http_404(client_socket, epoll_fd);
-    } else {
+//    struct stat path_stat;
+//    if (stat(final_path, &path_stat) == -1) {
+//        printf("404 Not Found: %s (%s)\n", final_path, path);
+//        handle_http_404(client_socket, epoll_fd);
+//    } else {
         /* Check if this is a normal/regular file and not a directory or something else */
-        if (S_ISREG(path_stat.st_mode)) {
+//        if (S_ISREG(path_stat.st_mode)) {
             struct request *req = zh_malloc(sizeof(*req) + (sizeof(struct iovec) * 6));
             req->iovec_count = 6;
             req->client_socket = client_socket;
-            send_headers(final_path, path_stat.st_size, req->iov);
-            copy_file_contents(final_path, path_stat.st_size, &req->iov[5]);
-            printf("200 %s %ld bytes\n", final_path, path_stat.st_size);
+            long str_size = sizeof(HTML);
+            send_headers(final_path, str_size, req->iov);
+            copy_file_contents(final_path, str_size, &req->iov[5]);
+            printf("200 %s %ld bytes\n", final_path, str_size);
             add_write_request(req, epoll_fd);
-        } else {
-            handle_http_404(client_socket, epoll_fd);
-            printf("404 Not Found: %s\n", final_path);
-        }
-    }
+//        } else {
+//            handle_http_404(client_socket, epoll_fd);
+//            printf("404 Not Found: %s\n", final_path);
+//        }
+//    }
 }
 
 /*
