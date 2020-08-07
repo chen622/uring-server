@@ -38,5 +38,5 @@ cmake --build .
 
 ## 调研报告
 
-https://github.com/chen622/uring-server/blob/master/%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A.md
+[跳转链接](/调研报告.md)
 
