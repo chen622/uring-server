@@ -7,9 +7,9 @@ The project test the throughput and latency of HTTP Server with io_uring or epol
 ### 1. install liburing
 
 ```bash
-wget  https://github.com/axboe/liburing/archive/liburing-0.7.zip
-unzip liburing-0.7.zip
-cd liburing-liburing-0.7/
+git submodule init
+git submodule update
+cd liburing
 ./configure --libdir=/usr/lib64 
 make CFLAGS=-std=gnu99 && make install
 ```
@@ -49,9 +49,9 @@ A basic test result: [test result](/调研报告.md).
 ### 1. 安装liburing
 
 ```bash
-wget  https://github.com/axboe/liburing/archive/liburing-0.7.zip
-unzip liburing-0.7.zip
-cd liburing-liburing-0.7/
+git submodule init
+git submodule update
+cd liburing
 ./configure --libdir=/usr/lib64 
 make CFLAGS=-std=gnu99 && make install
 ```
